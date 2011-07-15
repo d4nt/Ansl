@@ -1,0 +1,26 @@
+Ansl (A .NET Search Library)
+
+Usage:
+
+    var engine = new Ansl.Engine();
+    engine.Index(new Ansl.Document(
+        "test1.txt",
+        "The quick brown fox jumped over the lazy dog"));
+    engine.Index(new Ansl.Document(
+        "test2.txt",
+        "Hello World"));
+
+    foreach (var result in engine.Search(new string[] { "fox" }))
+    {
+        ...
+    }
+
+The Ansl.Engine class implements the TF-IDF algorithm.
+
+By default the Engine will be case in-sensitive and will store it's index
+in memory. To change this pass an Ansl.EngineOptions class and an 
+implementation of the Ansl.IIndexStore interface into the Engine's
+constructor.
+
+This library comes with an alternative implementation of the IIndexStore
+called IndexDirectoryStore which will store the index in a named folder.
