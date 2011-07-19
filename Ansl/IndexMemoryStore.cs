@@ -4,16 +4,16 @@ namespace Ansl
 {
     public class IndexMemoryStore : IIndexStore
     {
-        private Dictionary<string, int> _docCountPerWord = new Dictionary<string, int>();
-        private Dictionary<string, Dictionary<string, double>> _docIdsAndWordWeightings = new Dictionary<string, Dictionary<string, double>>();
+        private Dictionary<string, IEnumerable<string>> _docWordLists = new Dictionary<string, IEnumerable<string>>();
+        private Dictionary<string, IDictionary<string, double>> _docIdsAndWordWeightings = new Dictionary<string, IDictionary<string, double>>();
         private int _docCount = 0;
 
-        public void SaveDocumentIdsAndWeightings(string word, Dictionary<string, double> documentIdsAndWordWeightings)
+        public void SaveDocumentIdsAndWeightings(string word, IDictionary<string, double> documentIdsAndWordWeightings)
         {
             _docIdsAndWordWeightings[word] = documentIdsAndWordWeightings;
         }
 
-        public Dictionary<string, double> LoadDocumentIdsAndWeightings(string word)
+        public IDictionary<string, double> LoadDocumentIdsAndWeightings(string word)
         {
             return _docIdsAndWordWeightings[word];
         }
@@ -35,14 +35,22 @@ namespace Ansl
             }
         }
 
-        public void SaveDocumentCountByWord(string word, int documentCount)
+        public int LoadDocumentCountForWord(string word)
         {
-            _docCountPerWord[word] = documentCount;
+            return _docIdsAndWordWeightings.ContainsKey(word) ? _docIdsAndWordWeightings[word].Count : 0;
+        }
+        
+        public IEnumerable<string> LoadDocumentWordList(string documentId)
+        {
+            if (_docWordLists.ContainsKey(documentId))
+                return _docWordLists[documentId];
+            else
+                return null;
         }
 
-        public int LoadDocumentCountByWord(string word)
+        public void SaveDocumentWordList(string documentId, IEnumerable<string> words)
         {
-            return _docCountPerWord.ContainsKey(word) ? _docCountPerWord[word] : 0;
+            _docWordLists[documentId] = words;
         }
     }
 }

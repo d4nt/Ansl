@@ -3,16 +3,19 @@ Ansl (A .NET Search Library)
 Usage:
 
     var engine = new Ansl.Engine();
-    engine.Index(new Ansl.Document(
-        "test1.txt",
-        "The quick brown fox jumped over the lazy dog"));
-    engine.Index(new Ansl.Document(
-        "test2.txt",
-        "Hello World"));
+    engine.Index(
+        new Ansl.Document(
+            "test1.txt",
+            "The quick brown fox jumped over the lazy dog"));
+    engine.Index(
+        new Ansl.Document(
+            "test2.txt",
+            "Hello World"));
 
     foreach (var result in engine.Search(new string[] { "fox" }))
     {
-        ...
+        Assert.AreEqual("test1.txt", result);
+		
     }
 
 The Ansl.Engine class implements the TF-IDF algorithm.
@@ -24,6 +27,8 @@ constructor.
 
 This library comes with an alternative implementation of the IIndexStore
 called IndexDirectoryStore which will store the index in a named folder.
+Use this if you intend to index documents and the search them with a new
+instance of the Engine class later on.
 
 License
 -------

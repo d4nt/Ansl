@@ -9,7 +9,7 @@ namespace Ansl
     {
         private DirectoryInfo _dir;
         private const string DOC_COUNT_FILENAME = ".docCount";
-        private const string DOC_COUNT_PER_WORD_SUFFIX = ".docCount";
+        private const string DOC_WORD_LIST_SUFFIX = ".wordList";
 
         public IndexDirectoryStore(string directoryPath)
         {
@@ -23,7 +23,7 @@ namespace Ansl
             return File.Exists(Path.Combine(_dir.FullName, word));
         }
 
-        public void SaveDocumentIdsAndWeightings(string word, Dictionary<string, double> documentIdsAndWeightings)
+        public void SaveDocumentIdsAndWeightings(string word, IDictionary<string, double> documentIdsAndWeightings)
         {
             var formatter = new BinaryFormatter();
 
@@ -33,7 +33,7 @@ namespace Ansl
             }
         }
 
-        public Dictionary<string, double> LoadDocumentIdsAndWeightings(string word)
+        public IDictionary<string, double> LoadDocumentIdsAndWeightings(string word)
         {
             var result = new Dictionary<string, double>();
             var formatter = new BinaryFormatter();
@@ -65,16 +65,6 @@ namespace Ansl
             {
                 WriteSingleInt(DOC_COUNT_FILENAME, value);
             }
-        }
-
-        public void SaveDocumentCountByWord(string word, int documentCount)
-        {
-            WriteSingleInt(Path.Combine(_dir.FullName, word + DOC_COUNT_PER_WORD_SUFFIX), documentCount);
-        }
-
-        public int LoadDocumentCountByWord(string word)
-        {
-            return ReadSingleInt(Path.Combine(_dir.FullName, word + DOC_COUNT_PER_WORD_SUFFIX));
         }
 
         private void WriteSingleInt(string filename, int value)
@@ -115,6 +105,34 @@ namespace Ansl
             catch { }
 
             return result;
+        }
+
+        public int LoadDocumentCountForWord(string word)
+        {
+            return LoadDocumentIdsAndWeightings(word).Count;
+        }
+        
+        public IEnumerable<string> LoadDocumentWordList(string documentId)
+        {
+            IEnumerable<string> result = null;
+            var formatter = new BinaryFormatter();
+
+            using (var fs = new FileStream(Path.Combine(_dir.FullName, documentId + DOC_WORD_LIST_SUFFIX), FileMode.Open))
+            {
+                result = (IEnumerable<string>)formatter.Deserialize(fs);
+            }
+
+            return result;
+        }
+
+        public void SaveDocumentWordList(string documentId, IEnumerable<string> words)
+        {
+            var formatter = new BinaryFormatter();
+
+            using (var fs = new FileStream(Path.Combine(_dir.FullName, documentId + DOC_WORD_LIST_SUFFIX), FileMode.Create))
+            {
+                formatter.Serialize(fs, words);
+            }
         }
     }
 }
