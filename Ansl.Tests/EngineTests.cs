@@ -13,10 +13,12 @@ namespace Ansl.Tests
         public void TestSearchForWordInOneOfTwoDocuments_Success()
         {
             var engine = new Ansl.Engine();
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "The quick brown fox jumped over the lazy dog"));
+
             engine.Index(
                 new Ansl.Document(
                     "test2.txt",
@@ -32,10 +34,12 @@ namespace Ansl.Tests
         public void TestSearchForWordInOneOfTwoDocuments_Fail()
         {
             var engine = new Ansl.Engine();
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "The quick brown fox jumped over the lazy dog"));
+
             engine.Index(
                 new Ansl.Document(
                     "test2.txt",
@@ -51,15 +55,17 @@ namespace Ansl.Tests
         public void TestSearchForWordInOneOfTwoDocuments_CaseSensitve_Success()
         {
             var engine = new Ansl.Engine(
-                new Ansl.EngineOptions() { CaseSensitve = true },
+                new Ansl.EngineOptions() { CaseSensitve = false },
                 new Ansl.IndexMemoryStore());
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "Hello World"));
+
             engine.Index(
                 new Ansl.Document(
-                     "test1.txt",
+                     "test2.txt",
                      "The quick brown FoX jumped over the lazy dog"));
 
             bool found = false;
@@ -78,10 +84,12 @@ namespace Ansl.Tests
             var engine = new Ansl.Engine(
                 new Ansl.EngineOptions() { CaseSensitve = true },
                 new Ansl.IndexMemoryStore());
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "Hello World"));
+
             engine.Index(
                 new Ansl.Document(
                      "test1.txt",
@@ -97,10 +105,12 @@ namespace Ansl.Tests
         public void TestReIndexingTheSameDocumentWithSearchForWordOnlyInVersionOne()
         {
             var engine = new Ansl.Engine();
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "The quick brown fox jumped over the lazy dog"));
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
@@ -116,10 +126,12 @@ namespace Ansl.Tests
         public void TestReIndexingTheSameDocumentWithSearchForWordOnlyInVersionTwo()
         {
             var engine = new Ansl.Engine();
+
             engine.Index(
                 new Ansl.Document(
                     "test1.txt",
                     "Hello World")); 
+
             engine.Index(
                 new Ansl.Document(
                      "test1.txt",

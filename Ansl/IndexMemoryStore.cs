@@ -4,53 +4,42 @@ namespace Ansl
 {
     public class IndexMemoryStore : IIndexStore
     {
-        private Dictionary<string, IEnumerable<string>> _docWordLists = new Dictionary<string, IEnumerable<string>>();
-        private Dictionary<string, IDictionary<string, double>> _docIdsAndWordWeightings = new Dictionary<string, IDictionary<string, double>>();
-        private int _docCount = 0;
+        private Dictionary<string, TermInfo> _termInfos = new Dictionary<string, TermInfo>();
+        private Dictionary<string, IList<string>> _documentInfos = new Dictionary<string, IList<string>>();
 
-        public void SaveDocumentIdsAndWeightings(string word, IDictionary<string, double> documentIdsAndWordWeightings)
+        public bool ContainsTerm(string term)
         {
-            _docIdsAndWordWeightings[word] = documentIdsAndWordWeightings;
+            return _termInfos.ContainsKey(term);
         }
 
-        public IDictionary<string, double> LoadDocumentIdsAndWeightings(string word)
+        public void SaveTermInfo(TermInfo info)
         {
-            return _docIdsAndWordWeightings[word];
+            _termInfos[info.Term] = info;
         }
 
-        public bool ContainsWord(string word)
+        public TermInfo LoadTermInfo(string term)
         {
-            return _docIdsAndWordWeightings.ContainsKey(word);
+            return _termInfos.ContainsKey(term) ? _termInfos[term] : null;
         }
 
-        public int DocumentCount
+        public int GetDocumentCount()
         {
-            get
-            {
-                return _docCount;
-            }
-            set
-            {
-                _docCount = value;
-            }
+            return _documentInfos.Count;
         }
 
-        public int LoadDocumentCountForWord(string word)
+        public void SaveDocumentInfo(string documentId, IList<string> terms)
         {
-            return _docIdsAndWordWeightings.ContainsKey(word) ? _docIdsAndWordWeightings[word].Count : 0;
-        }
-        
-        public IEnumerable<string> LoadDocumentWordList(string documentId)
-        {
-            if (_docWordLists.ContainsKey(documentId))
-                return _docWordLists[documentId];
-            else
-                return null;
+            _documentInfos[documentId] = terms;
         }
 
-        public void SaveDocumentWordList(string documentId, IEnumerable<string> words)
+        public IList<string> LoadDocumentInfo(string documentId)
         {
-            _docWordLists[documentId] = words;
+            return _documentInfos[documentId];
+        }
+
+        public bool ContainsDocumentInfo(string documentId)
+        {
+            return _documentInfos.ContainsKey(documentId);
         }
     }
 }

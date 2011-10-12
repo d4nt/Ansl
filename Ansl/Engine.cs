@@ -46,86 +46,67 @@ namespace Ansl
         /// </summary>
         public void Index(Document document)
         {
-            var isNewDocument = true;
-            var documentWordCount = 0;
-            var documentCount = _store.DocumentCount;
-            var wordfrequency = new Dictionary<string, double>();
-            var wordsToRemove = new List<string>();
-            
-            // Was this document indexed before? If so load the old word frequencies, and re-calc the IDF for each word in the union of the two sets
-            var previousDocumentVersionWords = _store.LoadDocumentWordList(document.UniquieId);
-            if (previousDocumentVersionWords == null)
-            {
-                // This is a new document, so up the document count
-                documentCount++;
-                _store.DocumentCount = documentCount;
-            }
-            else
-            {
-                isNewDocument = false;
-                wordsToRemove.AddRange(previousDocumentVersionWords);
-            }
+            var documentTerms = new List<TermInfo>();            
 
-            var idfByWord = new Dictionary<string, double>();
-            var tfByWord = new Dictionary<string, double>();
-
-            // First pass, count the word frequencies for in this document
             foreach (var documentWord in document)
             {
-                var word = _nonAlphaNumChars.Replace(documentWord, "");
-                if (String.IsNullOrWhiteSpace(word) == false)
+                var term = _nonAlphaNumChars.Replace(documentWord, "");
+                if (String.IsNullOrWhiteSpace(term) == false)
                 {
                     if (_options.CaseSensitve == false)
-                        word = word.ToLower();
+                        term = term.ToLower();
 
-                    if (wordsToRemove != null && wordsToRemove.Contains(word))
-                        wordsToRemove.Remove(word);
+                    TermInfo termInfo = null;
 
-                    documentWordCount++;
-                    
                     // first time we've seen this word in this document?
-                    if (wordfrequency.ContainsKey(word) == false)
-                        wordfrequency[word] = 1;                        
+                    if (documentTerms.Any(t => t.Term == term))
+                    {
+                        termInfo = documentTerms.First(t => t.Term == term);
+                    }
+                    else if (_store.ContainsTerm(term))
+                    {
+                        termInfo = _store.LoadTermInfo(term);
+                        termInfo.DocumentsContaining.Add(document.UniquieId);
+                        documentTerms.Add(termInfo);
+                    }
                     else
-                        wordfrequency[word] += 1;
+                    {
+                        termInfo = new TermInfo() { Term = term };
+                        termInfo.DocumentsContaining.Add(document.UniquieId);
+                        documentTerms.Add(termInfo);
+                    }
 
-                    tfByWord[word] = wordfrequency[word] / (double)documentWordCount;
-
-                    var documentCountForWord = _store.LoadDocumentCountForWord(word);
-
-                    if (isNewDocument)
-                        documentCountForWord++;
-
-                    idfByWord[word] = Math.Log(1.0 + (documentCount / (double)documentCountForWord));
+                    if (termInfo.TermFrequencyByDocumentId.ContainsKey(document.UniquieId))
+                        termInfo.TermFrequencyByDocumentId[document.UniquieId] += 1;
+                    else
+                        termInfo.TermFrequencyByDocumentId[document.UniquieId] = 1;
                 }
             }
 
-            // Second pass, save the tfidf for each word in that document
-            foreach (var word in tfByWord.Keys)
+            // If this document has been indexed before, cleanup any terms that are no longer present
+            if (_store.ContainsDocumentInfo(document.UniquieId))
             {
-                IDictionary<string, double> docIdsAndWordWeightings = null;
-
-                if (_store.ContainsWord(word))
-                    docIdsAndWordWeightings = _store.LoadDocumentIdsAndWeightings(word);
-                else
-                    docIdsAndWordWeightings = new Dictionary<string, double>();
-
-                docIdsAndWordWeightings[document.UniquieId] = (tfByWord[word] * idfByWord[word]);
-
-                _store.SaveDocumentIdsAndWeightings(word, docIdsAndWordWeightings);
-            }
-
-            // Finally, any words that were in the previous version but not in the new one should be removed from the index
-            foreach (var word in wordsToRemove)
-            {
-                if (_store.ContainsWord(word))
+                foreach (var term in _store.LoadDocumentInfo(document.UniquieId))
                 {
-                    var docIdsAndWordWeightings = _store.LoadDocumentIdsAndWeightings(word);
-                    docIdsAndWordWeightings.Remove(document.UniquieId);
+                    // If this term is no longer references by this document...
+                    if (documentTerms.Any(t => t.Term == term) == false)
+                    {
+                        // remove out of date term infos and re-save
+                        var termInfo = _store.LoadTermInfo(term);
+
+                        termInfo.DocumentsContaining.Remove(document.UniquieId);
+
+                        _store.SaveTermInfo(termInfo);
+                    }
                 }
             }
 
-            _store.SaveDocumentWordList(document.UniquieId, tfByWord.Keys);
+            // Tell the store about this document
+            _store.SaveDocumentInfo(document.UniquieId, documentTerms.Select(t => t.Term).ToList());
+
+            // Tell the store about all the term infos we've found in this document
+            foreach (var termInfo in documentTerms)
+                _store.SaveTermInfo(termInfo);
         }
 
         /// <summary>
@@ -143,6 +124,8 @@ namespace Ansl
             // structure for holding the top results and their ranking
             var results = new Dictionary<string, double>();
 
+            int documentCount = _store.GetDocumentCount();
+
             foreach (var word in words)
             {
                 string searchWord = word;
@@ -150,18 +133,16 @@ namespace Ansl
                 if (_options.CaseSensitve == false)
                     searchWord = word.ToLower();
 
-                if (_store.ContainsWord(searchWord))
+                if (_store.ContainsTerm(searchWord))
                 {
-                    var wordWeightings = _store.LoadDocumentIdsAndWeightings(searchWord);
+                    var termInfo = _store.LoadTermInfo(searchWord);
 
-                    foreach (var documentId in wordWeightings.Keys)
+                    foreach (var documentId in termInfo.DocumentsContaining)
                     {
                         if (results.ContainsKey(documentId))
-                        {
-                            results[documentId] += wordWeightings[documentId];
-                        }
+                            results[documentId] += termInfo.GetTfIdf(documentId, documentCount);
                         else
-                            results.Add(documentId, wordWeightings[documentId]);
+                            results.Add(documentId, termInfo.GetTfIdf(documentId, documentCount));
 
                     }
                 }

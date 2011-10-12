@@ -7,55 +7,48 @@ namespace Ansl
         /// <summary>
         /// Indicates whether the store contains a reference to a particlar word
         /// </summary>
-        /// <param name="word">The word to look for in the store</param>
+        /// <param name="term">The word to look for in the store</param>
         /// <returns>True, if the word is in the store, false otherwise</returns>
-        bool ContainsWord(string word);
-
+        bool ContainsTerm(string term);
+        
         /// <summary>
-        /// Stores a set of document IDs and weightings in the store for a particular word
+        /// Asks the store to save the term info object
         /// </summary>
-        /// <param name="word">The word that the second parameter relates to</param>
-        /// <param name="documentWeightings">A dictionary of document IDs and weightings</param>
-        void SaveDocumentIdsAndWeightings(string word, IDictionary<string, double> documentIdsAndWeightings);
-
+        /// <param name="term">The term/word that this term info relates to</param>
+        /// <param name="info">The TermInfo object to save</param>
+        void SaveTermInfo(TermInfo info);
+        
         /// <summary>
-        /// Loads a set of document IDs and weightings from the store for a particular word
+        /// Asks the store to retrieve a term info object
         /// </summary>
-        /// <param name="word">The word to load the document IDs and weightings for</param>
-        /// <returns>A dictionary of document IDs and weights</returns>
-        IDictionary<string, double> LoadDocumentIdsAndWeightings(string word);
-
+        /// <param name="term">The term/word to load the info for</param>
+        /// <returns>The requested term info object</returns>
+        TermInfo LoadTermInfo(string term);
+        
         /// <summary>
         /// The number of documents that are referenced in this index
         /// </summary>
-        int DocumentCount { get; set; }
+        int GetDocumentCount();
 
         /// <summary>
-        /// Retrieves a count of how many documents the specified word appears in
+        /// Asks the store whether a specific document id is in the store
         /// </summary>
-        /// <remarks>
-        /// The engine could just load the document Ids and weightings for the particular word
-        /// but this method allows the engine to optimise for when only the document count
-        /// is needed. If implementors do not wich to optimise this then simply load the
-        /// dictionary of document Ids and weights and return the number of items in that
-        /// dictionary
-        /// </remarks>
-        /// <param name="word">The word</param>
-        /// <returns>The number of documents it appears in</returns>
-        int LoadDocumentCountForWord(string word);
+        /// <param name="documentId">The document id to check for</param>
+        /// <returns>True if the store contains that document, false otherwise</returns>
+        bool ContainsDocumentInfo(string documentId);
 
         /// <summary>
-        /// Loads a list of unique words from the previously indexed version of the document
+        /// Tells the store to record that the engine has indexed this document id
         /// </summary>
-        /// <param name="documentId">The unique ID of the document to load the words for</param>
-        /// <returns>A list of words contained in the document</returns>
-        IEnumerable<string> LoadDocumentWordList(string documentId);
+        /// <param name="terms">The terms included in this document</param>
+        /// <param name="documentId">The unique ID of the document to record</param>
+        void SaveDocumentInfo(string documentId, IList<string> terms);
 
         /// <summary>
-        /// Saves a new list of unique words for the specified document 
+        /// Retrieves the a list of terms that the document includes
         /// </summary>
         /// <param name="documentId">The unique ID of the document</param>
-        /// <param name="words">A list of words contains in the document</param>
-        void SaveDocumentWordList(string documentId, IEnumerable<string> words);
+        /// <returns>A list of terms contained within the document</returns>
+        IList<string> LoadDocumentInfo(string documentId);        
     }
 }

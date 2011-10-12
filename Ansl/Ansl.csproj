@@ -44,10 +44,11 @@
     <Compile Include="Document.cs" />
     <Compile Include="EngineOptions.cs" />
     <Compile Include="IIndexStore.cs" />
-    <Compile Include="IndexDirectoryStore.cs" />
     <Compile Include="Engine.cs" />
+    <Compile Include="IndexDirectoryStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndexMemoryStore.cs" />
+    <Compile Include="TermInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -22,7 +22,7 @@ namespace Ansl.TestHarness
             // Second argument, a pipe separated list of words to search for
             string[] searchWords = args[1].Split('|');
 
-            var engine = new Engine();
+            var engine = new Engine(new EngineOptions(), new IndexDirectoryStore(@"C:\temp\AnslIndex\"));
 
             // Index all files in the arg[0] folder
             foreach (var fileName in Directory.EnumerateFiles(documentsFolder))
